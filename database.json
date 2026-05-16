@@ -1,0 +1,45 @@
+{
+  "sectores": [
+    {
+      "id": 1,
+      "nombre": "Zona de Frutas y Verduras",
+      "categoria": "frutas_verduras",
+      "descripcion": "Productos frescos como manzanas, lechugas, tomates"
+    },
+    {
+      "id": 2,
+      "nombre": "Zona de Carnes",
+      "categoria": "carnes",
+      "descripcion": "Carnes rojas, pollo, pescado"
+    },
+    {
+      "id": 3,
+      "nombre": "Zona de Textiles",
+      "categoria": "textiles",
+      "descripcion": "Ropa, telas, calzado"
+    }
+  ],
+  "puestos": [
+    {
+      "id": 1,
+      "id_sector": 1,
+      "nombre_vendedor": "Pedro López",
+      "giro_negocio": "frutas_verduras",
+      "dimensiones": {"ancho": 2.5, "largo": 2.0, "metros_cuadrados": 5.0}
+    },
+    {
+      "id": 2,
+      "id_sector": 1,
+      "nombre_vendedor": "María García",
+      "giro_negocio": "frutas_verduras",
+      "dimensiones": {"ancho": 2.5, "largo": 2.0, "metros_cuadrados": 5.0}
+    },
+    {
+      "id": 3,
+      "id_sector": 2,
+      "nombre_vendedor": "Juan Pérez",
+      "giro_negocio": "carnes",
+      "dimensiones": {"ancho": 3.0, "largo": 2.5, "metros_cuadrados": 7.5}
+    }
+  ]
+}
