@@ -52,6 +52,19 @@
 | **Control de Versiones** | Git + GitHub |
 | **Pruebas** | Postman / Navegador Web |
 
+
+
+--- SUPUESTOS ----
+
+## 11. Verificación de Supuestos
+
+| Supuesto | Estado | Evidencia |
+|----------|--------|-----------|
+| **Supuesto 1** (Sin autenticación) | ✅ Cumple | No hay login ni contraseñas en el sistema |
+| **Supuesto 2** (Solo JSON) | ✅ Cumple | Base de datos en database.json, sin MySQL/PostgreSQL |
+| **Supuesto 3** (Un admin a la vez) | ✅ Cumple | Sin mecanismos de bloqueo, se asume uso secuencial |
+| **Supuesto 4** (Conocimientos Python) | ✅ Cumple | El código utiliza variables, funciones, condicionales y archivos |
+
 ---
 
 ## 📦 Instalación y Configuración
