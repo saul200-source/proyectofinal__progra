@@ -23,23 +23,79 @@
     {
       "id": 1,
       "id_sector": 1,
-      "nombre_vendedor": "Pedro López",
+      "nombre_vendedor": "juan perez",
       "giro_negocio": "frutas_verduras",
-      "dimensiones": {"ancho": 2.5, "largo": 2.0, "metros_cuadrados": 5.0}
+      "dimensiones": {
+        "ancho": 5,
+        "largo": 20,
+        "metros_cuadrados": 100
+      }
     },
     {
       "id": 2,
       "id_sector": 1,
-      "nombre_vendedor": "María García",
+      "nombre_vendedor": "juan perez",
       "giro_negocio": "frutas_verduras",
-      "dimensiones": {"ancho": 2.5, "largo": 2.0, "metros_cuadrados": 5.0}
+      "dimensiones": {
+        "ancho": 5,
+        "largo": 20,
+        "metros_cuadrados": 100
+      }
     },
     {
       "id": 3,
+      "id_sector": 1,
+      "nombre_vendedor": "juan perez",
+      "giro_negocio": "frutas_verduras",
+      "dimensiones": {
+        "ancho": 5,
+        "largo": 20,
+        "metros_cuadrados": 100
+      }
+    },
+    {
+      "id": 4,
+      "id_sector": 1,
+      "nombre_vendedor": "juan perez",
+      "giro_negocio": "frutas_verduras",
+      "dimensiones": {
+        "ancho": 5,
+        "largo": 20,
+        "metros_cuadrados": 100
+      }
+    },
+    {
+      "id": 5,
       "id_sector": 2,
-      "nombre_vendedor": "Juan Pérez",
+      "nombre_vendedor": "macario roca",
       "giro_negocio": "carnes",
-      "dimensiones": {"ancho": 3.0, "largo": 2.5, "metros_cuadrados": 7.5}
+      "dimensiones": {
+        "ancho": 5,
+        "largo": 10,
+        "metros_cuadrados": 50
+      }
+    },
+    {
+      "id": 6,
+      "id_sector": 2,
+      "nombre_vendedor": "macario roca",
+      "giro_negocio": "carnes",
+      "dimensiones": {
+        "ancho": 5,
+        "largo": 10,
+        "metros_cuadrados": 50
+      }
+    },
+    {
+      "id": 7,
+      "id_sector": 3,
+      "nombre_vendedor": "mario brenes",
+      "giro_negocio": "textiles",
+      "dimensiones": {
+        "ancho": 5,
+        "largo": 5,
+        "metros_cuadrados": 25
+      }
     }
   ]
 }
