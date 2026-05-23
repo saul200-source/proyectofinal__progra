@@ -15,7 +15,33 @@ LIMITES_SECTOR = {
 TOTAL_MAXIMO_LOCALES = 20
 
 # Tamaño base del local (ancho fijo 5m, largo variable)
-ANCHO_FIJO = 5  # 5 metros fijos de ancho
+ANCHO_FIJO = 5
+
+# ============ CONFIGURACIÓN DE PASAJES (RANGOS DE IDS) ============
+# Cada sector tiene un rango de IDs predefinido
+RANGOS_IDS = {
+    1: {"sector": "Frutas y Verduras", "inicio": 9, "fin": 16, "icono": "🥬"},      # IDs 9 al 16
+    2: {"sector": "Carnes", "inicio": 1, "fin": 8, "icono": "🥩"},                   # IDs 1 al 8
+    3: {"sector": "Textiles", "inicio": 17, "fin": 20, "icono": "👕"}                # IDs 17 al 20
+}
+
+def obtener_sector_por_id(id_puesto):
+    """Devuelve el sector al que pertenece un ID según su rango"""
+    for sector_id, rango in RANGOS_IDS.items():
+        if rango["inicio"] <= id_puesto <= rango["fin"]:
+            return sector_id, rango["sector"], rango["icono"]
+    return None, "Desconocido", "❓"
+
+def siguiente_id_disponible(id_sector):
+    """Obtiene el siguiente ID libre dentro del rango del sector"""
+    datos = leer_datos()
+    rango = RANGOS_IDS[id_sector]
+    ids_ocupados = [p["id"] for p in datos["puestos"]]
+    
+    for id_posible in range(rango["inicio"], rango["fin"] + 1):
+        if id_posible not in ids_ocupados:
+            return id_posible
+    return None  # No hay IDs disponibles en ese rango
 
 # ============ HTML DE LA INTERFAZ WEB ============
 INTERFAZ_HTML = '''
@@ -117,12 +143,10 @@ INTERFAZ_HTML = '''
             flex: 1;
         }
         
-        /* Estilos para la tabla */
         .tabla-datos {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
-            font-size: 14px;
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -132,12 +156,10 @@ INTERFAZ_HTML = '''
             color: white;
             padding: 12px;
             text-align: left;
-            font-weight: bold;
         }
         .tabla-datos td {
             border: 1px solid #ddd;
             padding: 10px;
-            text-align: left;
             background-color: white;
         }
         .tabla-datos tr:nth-child(even) td {
@@ -163,7 +185,6 @@ INTERFAZ_HTML = '''
             margin-bottom: 10px;
         }
         
-        /* Indicadores de capacidad */
         .capacidad-container {
             display: flex;
             gap: 15px;
@@ -196,7 +217,15 @@ INTERFAZ_HTML = '''
             margin-top: 5px;
         }
         
-        /* Notificación tipo nubecita */
+        .info-pasillos {
+            background: #e8eaf6;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+        
         .notificacion {
             position: fixed;
             bottom: 30px;
@@ -231,7 +260,6 @@ INTERFAZ_HTML = '''
             color: #999;
         }
         
-        /* Selector de vendedor */
         .selector-vendedor {
             background: #f0f0f0;
             padding: 15px;
@@ -253,7 +281,6 @@ INTERFAZ_HTML = '''
         .acciones-modulos button {
             flex: 1;
         }
-        
         .info-dimensiones {
             background: #fff3e0;
             padding: 10px;
@@ -262,7 +289,6 @@ INTERFAZ_HTML = '''
             margin-top: 10px;
             border-left: 4px solid #f39c12;
         }
-        
         .tabla-container {
             overflow-x: auto;
             margin-top: 15px;
@@ -278,12 +304,19 @@ INTERFAZ_HTML = '''
             <span class="badge badge-modulo">📐 Ancho fijo: 5m | Largo: 5m, 10m, 15m, 20m</span>
         </div>
         
-        <!-- Indicadores de capacidad -->
-        <div class="capacidad-container" id="capacidad-container">
-            <!-- Se llena con JavaScript -->
+        <!-- Información de pasillos por ID -->
+        <div class="info-pasillos">
+            <strong>📍 Distribución de IDs por sector (pasillos):</strong><br>
+            🥩 Carnes: IDs 1 al 8 &nbsp;&nbsp;|&nbsp;&nbsp;
+            🥬 Frutas y Verduras: IDs 9 al 16 &nbsp;&nbsp;|&nbsp;&nbsp;
+            👕 Textiles: IDs 17 al 20<br>
+            <span style="font-size: 12px; color: #666;">⚠️ Los IDs se asignan automáticamente según el sector elegido</span>
         </div>
         
-        <!-- ============ MENÚ DE CONSULTAS ============ -->
+        <!-- Indicadores de capacidad -->
+        <div class="capacidad-container" id="capacidad-container"></div>
+        
+        <!-- Menú de consultas -->
         <div class="menu-consultas">
             <div class="menu-titulo">📊 MENÚ DE CONSULTAS</div>
             <div class="grupo-botones">
@@ -302,26 +335,23 @@ INTERFAZ_HTML = '''
         
         <hr>
         
-        <!-- Sección: Asignar nuevo vendedor -->
+        <!-- Asignar nuevo vendedor -->
         <h2>📝 Asignar nuevo vendedor</h2>
         <select id="id_sector">
-            <option value="1">Zona Frutas y Verduras (Máx: 8 locales)</option>
-            <option value="2">Zona Carnes (Máx: 8 locales)</option>
-            <option value="3">Zona Textiles (Máx: 4 locales)</option>
+            <option value="2">🥩 Zona Carnes (IDs 1-8, Máx: 8 locales)</option>
+            <option value="1">🥬 Zona Frutas y Verduras (IDs 9-16, Máx: 8 locales)</option>
+            <option value="3">👕 Zona Textiles (IDs 17-20, Máx: 4 locales)</option>
         </select>
         <input type="text" id="nombre_vendedor" placeholder="Nombre del vendedor">
         <select id="cantidad_modulos">
-            <option value="1">1 módulo - 5m ancho x 5m largo (25m²)</option>
-            <option value="2">2 módulos - 5m ancho x 10m largo (50m²)</option>
-            <option value="3">3 módulos - 5m ancho x 15m largo (75m²)</option>
-            <option value="4">4 módulos - 5m ancho x 20m largo (100m²)</option>
+            <option value="1">1 módulo (5m x 5m = 25m²)</option>
+            <option value="2">2 módulos (5m x 10m = 50m²)</option>
+            <option value="3">3 módulos (5m x 15m = 75m²)</option>
+            <option value="4">4 módulos (5m x 20m = 100m²)</option>
         </select>
-        <div class="info-dimensiones">
-            💡 Nota: El ancho de todos los locales es FIJO de 5 metros. El largo varía según los módulos (cada módulo = 5m de largo).
-        </div>
         <button onclick="asignarVendedor()">➕ Asignar Vendedor</button>
 
-        <!-- Sección: Gestionar módulos de vendedor -->
+        <!-- Gestionar módulos -->
         <hr>
         <h2>📦 Gestionar módulos de un vendedor</h2>
         <div class="selector-vendedor">
@@ -338,7 +368,6 @@ INTERFAZ_HTML = '''
             <button class="btn-eliminar" onclick="eliminarVendedor()">🗑️ Eliminar vendedor completo</button>
         </div>
         
-        <!-- Sección: Información extra -->
         <hr>
         <div class="info-dimensiones">
             <strong>📐 Esquema de dimensiones:</strong><br>
@@ -370,17 +399,13 @@ INTERFAZ_HTML = '''
                 <div class="notificacion-mensaje">${mensaje}</div>
             `;
             document.body.appendChild(notif);
-            
-            setTimeout(() => {
-                if (notif) notif.remove();
-            }, 10000);
+            setTimeout(() => { if (notif) notif.remove(); }, 10000);
         }
         
         async function actualizarCapacidad() {
             try {
                 const response = await fetch(API_URL + '/capacidad');
                 const capacidad = await response.json();
-                
                 const container = document.getElementById('capacidad-container');
                 container.innerHTML = `
                     <div class="capacidad-card frutas">
@@ -413,10 +438,8 @@ INTERFAZ_HTML = '''
             try {
                 const response = await fetch(API_URL + '/vendedores');
                 const vendedores = await response.json();
-                
                 const select = document.getElementById('select_vendedor');
                 select.innerHTML = '<option value="">-- Seleccione un vendedor --</option>';
-                
                 for (let v of vendedores) {
                     select.innerHTML += `<option value="${v.id}">${v.nombre} - ${v.sector} (${v.modulos} módulos)</option>`;
                 }
@@ -440,7 +463,8 @@ INTERFAZ_HTML = '''
                     👤 Nombre: ${v.nombre}<br>
                     📍 Sector: ${v.sector}<br>
                     📦 Módulos actuales: ${v.modulos}<br>
-                    📐 Dimensiones: ${v.ancho}m (ancho) x ${v.largo}m (largo) = ${v.metros_cuadrados}m²<br>
+                    📐 Dimensiones por módulo: 5m x 5m = 25m² c/u<br>
+                    📏 Espacio total: ${v.modulos * 25} m²<br>
                     🆔 IDs de puestos: ${v.ids.join(', ')}
                 `;
                 infoDiv.style.display = 'block';
@@ -466,18 +490,9 @@ INTERFAZ_HTML = '''
             }
             
             let html = `<h3 style="margin-bottom:10px;">${titulo}</h3>`;
-            html += `<table class="tabla-datos">`;
-            html += `<thead>`;
-            html += `<tr>
-                        <th>ID(s)</th>
-                        <th>Vendedor</th>
-                        <th>Giro</th>
-                        <th>Sector</th>
-                        <th>Módulos</th>
-                        <th>Espacio (m²)</th>
-                        <th>Dimensiones</th>
-                      </tr>`;
-            html += `</thead><tbody>`;
+            html += '<table class="tabla-datos"><thead><tr>' +
+                        '<th>ID(s)</th><th>Vendedor</th><th>Giro</th><th>Sector</th><th>Módulos</th><th>Espacio total</th>' +
+                    '</tr></thead><tbody>';
             
             const vendedoresMap = new Map();
             for (let puesto of puestos) {
@@ -491,7 +506,7 @@ INTERFAZ_HTML = '''
                 const primerPuesto = puestosVendedor[0];
                 let ids = puestosVendedor.map(p => p.id).join(', ');
                 let modulos = puestosVendedor.length;
-                let dimensiones = `${primerPuesto.dimensiones.ancho}m x ${primerPuesto.dimensiones.largo}m`;
+                let espacioTotal = modulos * 25;
                 
                 let claseColor = "";
                 let giroTexto = "";
@@ -512,11 +527,10 @@ INTERFAZ_HTML = '''
                             <td class="${claseColor}">${giroTexto}</td>
                             <td>${primerPuesto.sector_nombre || primerPuesto.id_sector}</td>
                             <td>${modulos} módulo(s)</td>
-                            <td>${primerPuesto.dimensiones.metros_cuadrados} m²</td>
-                            <td>${dimensiones}</td>
-                          </tr>`;
+                            <td>${espacioTotal} m²</td>
+                         </tr>`;
             }
-            html += `</tbody></table>`;
+            html += '</tbody></table>';
             tablaDiv.innerHTML = html;
         }
         
@@ -528,7 +542,6 @@ INTERFAZ_HTML = '''
                 ]);
                 const puestos = await puestosRes.json();
                 const sectores = await sectoresRes.json();
-                
                 for (let puesto of puestos) {
                     const sector = sectores.find(s => s.id === puesto.id_sector);
                     puesto.sector_nombre = sector ? sector.nombre : "Desconocido";
@@ -550,26 +563,22 @@ INTERFAZ_HTML = '''
             const puestos = await obtenerTodosLosPuestos();
             const filtrados = puestos.filter(p => p.giro_negocio === 'frutas_verduras');
             mostrarTabla(filtrados, "🥬 PUESTOS DE FRUTAS Y VERDURAS");
-            mostrarNotificacion(`Se encontraron ${filtrados.length} puestos de Frutas y Verduras`, "exito");
         }
         
         async function verSoloCarnes() {
             const puestos = await obtenerTodosLosPuestos();
             const filtrados = puestos.filter(p => p.giro_negocio === 'carnes');
             mostrarTabla(filtrados, "🥩 PUESTOS DE CARNES");
-            mostrarNotificacion(`Se encontraron ${filtrados.length} puestos de Carnes`, "exito");
         }
         
         async function verSoloTextiles() {
             const puestos = await obtenerTodosLosPuestos();
             const filtrados = puestos.filter(p => p.giro_negocio === 'textiles');
             mostrarTabla(filtrados, "👕 PUESTOS DE TEXTILES");
-            mostrarNotificacion(`Se encontraron ${filtrados.length} puestos de Textiles`, "exito");
         }
 
         async function asignarVendedor() {
             const modulos = parseInt(document.getElementById('cantidad_modulos').value);
-            const dimensiones = calcularDimensionesPorModulos(modulos);
             const idSector = parseInt(document.getElementById('id_sector').value);
             
             let giro = "";
@@ -581,9 +590,7 @@ INTERFAZ_HTML = '''
                 id_sector: idSector,
                 nombre_vendedor: document.getElementById('nombre_vendedor').value,
                 giro_negocio: giro,
-                modulos: modulos,
-                ancho: dimensiones.ancho,
-                largo: dimensiones.largo
+                modulos: modulos
             };
 
             if (!data.nombre_vendedor) {
@@ -598,7 +605,6 @@ INTERFAZ_HTML = '''
                     body: JSON.stringify(data)
                 });
                 const result = await response.json();
-                
                 if (response.ok) {
                     mostrarNotificacion(result.mensaje, "exito");
                     document.getElementById('nombre_vendedor').value = '';
@@ -619,13 +625,9 @@ INTERFAZ_HTML = '''
                 mostrarNotificacion("Por favor selecciona un vendedor", "error");
                 return;
             }
-            
             try {
-                const response = await fetch(API_URL + '/vendedor/' + id + '/aumentar', {
-                    method: 'PUT'
-                });
+                const response = await fetch(API_URL + '/vendedor/' + id + '/aumentar', { method: 'PUT' });
                 const result = await response.json();
-                
                 if (response.ok) {
                     mostrarNotificacion(result.mensaje, "exito");
                     await cargarListaVendedores();
@@ -636,7 +638,7 @@ INTERFAZ_HTML = '''
                     mostrarNotificacion(result.error, "error");
                 }
             } catch (error) {
-                mostrarNotificacion("Error de conexión con el servidor", "error");
+                mostrarNotificacion("Error de conexión", "error");
             }
         }
         
@@ -646,13 +648,9 @@ INTERFAZ_HTML = '''
                 mostrarNotificacion("Por favor selecciona un vendedor", "error");
                 return;
             }
-            
             try {
-                const response = await fetch(API_URL + '/vendedor/' + id + '/reducir', {
-                    method: 'PUT'
-                });
+                const response = await fetch(API_URL + '/vendedor/' + id + '/reducir', { method: 'PUT' });
                 const result = await response.json();
-                
                 if (response.ok) {
                     mostrarNotificacion(result.mensaje, "exito");
                     await cargarListaVendedores();
@@ -663,7 +661,7 @@ INTERFAZ_HTML = '''
                     mostrarNotificacion(result.error, "error");
                 }
             } catch (error) {
-                mostrarNotificacion("Error de conexión con el servidor", "error");
+                mostrarNotificacion("Error de conexión", "error");
             }
         }
         
@@ -673,14 +671,10 @@ INTERFAZ_HTML = '''
                 mostrarNotificacion("Por favor selecciona un vendedor", "error");
                 return;
             }
-            
             if (confirm("⚠️ ¿Estás seguro de eliminar COMPLETAMENTE a este vendedor? Esta acción no se puede deshacer.")) {
                 try {
-                    const response = await fetch(API_URL + '/vendedor/' + id + '/eliminar', {
-                        method: 'DELETE'
-                    });
+                    const response = await fetch(API_URL + '/vendedor/' + id + '/eliminar', { method: 'DELETE' });
                     const result = await response.json();
-                    
                     if (response.ok) {
                         mostrarNotificacion(result.mensaje, "exito");
                         await cargarListaVendedores();
@@ -692,12 +686,11 @@ INTERFAZ_HTML = '''
                         mostrarNotificacion(result.error, "error");
                     }
                 } catch (error) {
-                    mostrarNotificacion("Error de conexión con el servidor", "error");
+                    mostrarNotificacion("Error de conexión", "error");
                 }
             }
         }
         
-        // Inicialización
         actualizarCapacidad();
         cargarListaVendedores();
         setInterval(actualizarCapacidad, 5000);
@@ -741,7 +734,6 @@ def interfaz():
 def obtener_capacidad():
     conteo = contar_puestos_por_sector()
     total_ocupados = sum(conteo.values())
-    
     return jsonify({
         "frutas_max": LIMITES_SECTOR[1]["maximo"],
         "frutas_ocupados": conteo[1],
@@ -756,9 +748,7 @@ def obtener_capacidad():
 @app.route('/api/vendedores', methods=['GET'])
 def listar_vendedores():
     datos = leer_datos()
-    vendedores = []
     vendedores_dict = {}
-    
     for puesto in datos['puestos']:
         nombre = puesto['nombre_vendedor']
         if nombre not in vendedores_dict:
@@ -767,7 +757,6 @@ def listar_vendedores():
                 if s['id'] == puesto['id_sector']:
                     sector_nombre = s['nombre']
                     break
-            
             vendedores_dict[nombre] = {
                 "id": puesto['id'],
                 "nombre": nombre,
@@ -778,144 +767,93 @@ def listar_vendedores():
         else:
             vendedores_dict[nombre]["modulos"] += 1
             vendedores_dict[nombre]["ids"].append(puesto['id'])
-    
-    for v in vendedores_dict.values():
-        vendedores.append(v)
-    
-    return jsonify(vendedores)
+    return jsonify(list(vendedores_dict.values()))
 
 @app.route('/api/vendedor/<int:id>', methods=['GET'])
 def obtener_vendedor_por_id(id):
     datos = leer_datos()
     puesto = next((p for p in datos['puestos'] if p['id'] == id), None)
-    
     if not puesto:
         return jsonify({"error": "Vendedor no encontrado"}), 404
-    
     puestos_vendedor = [p for p in datos['puestos'] if p['nombre_vendedor'] == puesto['nombre_vendedor']]
-    
     sector_nombre = ""
     for s in datos['sectores']:
         if s['id'] == puesto['id_sector']:
             sector_nombre = s['nombre']
             break
-    
     return jsonify({
         "id": id,
         "nombre": puesto['nombre_vendedor'],
         "sector": sector_nombre,
         "modulos": len(puestos_vendedor),
-        "ids": [p['id'] for p in puestos_vendedor],
-        "ancho": puesto['dimensiones']['ancho'],
-        "largo": puesto['dimensiones']['largo'],
-        "metros_cuadrados": puesto['dimensiones']['metros_cuadrados']
+        "ids": [p['id'] for p in puestos_vendedor]
     })
 
 @app.route('/api/vendedor/<int:id>/aumentar', methods=['PUT'])
 def aumentar_modulos(id):
     datos = leer_datos()
     puesto = next((p for p in datos['puestos'] if p['id'] == id), None)
-    
     if not puesto:
         return jsonify({"error": "Vendedor no encontrado"}), 404
-    
     puestos_vendedor = [p for p in datos['puestos'] if p['nombre_vendedor'] == puesto['nombre_vendedor']]
     modulos_actuales = len(puestos_vendedor)
-    
     if modulos_actuales >= 4:
         return jsonify({"error": "No se puede aumentar. Máximo 4 módulos por vendedor"}), 400
-    
     if not verificar_cupo_disponible(puesto['id_sector'], modulos_actuales + 1):
         limite = LIMITES_SECTOR[puesto['id_sector']]["maximo"]
         conteo = contar_puestos_por_sector()
         disponibles = limite - conteo[puesto['id_sector']]
         return jsonify({"error": f"No hay espacio disponible. Solo quedan {disponibles} espacios en este sector"}), 400
-    
-    ultimo_id = max([p['id'] for p in datos['puestos']])
-    nuevo_id = ultimo_id + 1
-    
-    nuevos_modulos = modulos_actuales + 1
-    ancho = 5
-    largo = nuevos_modulos * 5
-    
+    nuevo_id = siguiente_id_disponible(puesto['id_sector'])
+    if nuevo_id is None:
+        rango = RANGOS_IDS[puesto['id_sector']]
+        return jsonify({"error": f"No hay IDs disponibles en el rango {rango['inicio']}-{rango['fin']} para {rango['sector']}"}), 400
     nuevo_puesto = {
         "id": nuevo_id,
         "id_sector": puesto['id_sector'],
         "nombre_vendedor": puesto['nombre_vendedor'],
         "giro_negocio": puesto['giro_negocio'],
         "dimensiones": {
-            "ancho": ancho,
-            "largo": largo,
-            "metros_cuadrados": round(ancho * largo, 2)
+            "ancho": 5,
+            "largo": 5,
+            "metros_cuadrados": 25
         }
     }
     datos['puestos'].append(nuevo_puesto)
-    
-    for p in datos['puestos']:
-        if p['nombre_vendedor'] == puesto['nombre_vendedor']:
-            p['dimensiones']['ancho'] = ancho
-            p['dimensiones']['largo'] = largo
-            p['dimensiones']['metros_cuadrados'] = round(ancho * largo, 2)
-    
     guardar_datos(datos)
-    
     return jsonify({
-        "mensaje": f"✅ Se agregó 1 módulo a {puesto['nombre_vendedor']}. Ahora tiene {nuevos_modulos} módulos. Nuevo ID: {nuevo_id}",
-        "nuevos_modulos": nuevos_modulos,
-        "nuevas_dimensiones": f"{ancho}m x {largo}m"
+        "mensaje": f"✅ Se agregó 1 módulo a {puesto['nombre_vendedor']}. Ahora tiene {modulos_actuales + 1} módulos. Nuevo ID: {nuevo_id}"
     })
 
 @app.route('/api/vendedor/<int:id>/reducir', methods=['PUT'])
 def reducir_modulos(id):
     datos = leer_datos()
     puesto = next((p for p in datos['puestos'] if p['id'] == id), None)
-    
     if not puesto:
         return jsonify({"error": "Vendedor no encontrado"}), 404
-    
     puestos_vendedor = [p for p in datos['puestos'] if p['nombre_vendedor'] == puesto['nombre_vendedor']]
     modulos_actuales = len(puestos_vendedor)
-    
     if modulos_actuales <= 1:
         return jsonify({"error": "No se puede reducir. El vendedor ya tiene solo 1 módulo"}), 400
-    
     puestos_vendedor.sort(key=lambda x: x['id'])
     puesto_a_eliminar = puestos_vendedor[-1]
     datos['puestos'] = [p for p in datos['puestos'] if p['id'] != puesto_a_eliminar['id']]
-    
-    nuevos_modulos = modulos_actuales - 1
-    ancho = 5
-    largo = nuevos_modulos * 5
-    
-    for p in datos['puestos']:
-        if p['nombre_vendedor'] == puesto['nombre_vendedor']:
-            p['dimensiones']['ancho'] = ancho
-            p['dimensiones']['largo'] = largo
-            p['dimensiones']['metros_cuadrados'] = round(ancho * largo, 2)
-    
     guardar_datos(datos)
-    
     return jsonify({
-        "mensaje": f"✅ Se eliminó 1 módulo de {puesto['nombre_vendedor']}. Ahora tiene {nuevos_modulos} módulos",
-        "nuevos_modulos": nuevos_modulos,
-        "nuevas_dimensiones": f"{ancho}m x {largo}m"
+        "mensaje": f"✅ Se eliminó 1 módulo de {puesto['nombre_vendedor']}. Ahora tiene {modulos_actuales - 1} módulos"
     })
 
 @app.route('/api/vendedor/<int:id>/eliminar', methods=['DELETE'])
 def eliminar_vendedor_completo(id):
     datos = leer_datos()
     puesto = next((p for p in datos['puestos'] if p['id'] == id), None)
-    
     if not puesto:
         return jsonify({"error": "Vendedor no encontrado"}), 404
-    
     nombre_vendedor = puesto['nombre_vendedor']
     puestos_a_eliminar = [p for p in datos['puestos'] if p['nombre_vendedor'] == nombre_vendedor]
     cantidad = len(puestos_a_eliminar)
-    
     datos['puestos'] = [p for p in datos['puestos'] if p['nombre_vendedor'] != nombre_vendedor]
     guardar_datos(datos)
-    
     return jsonify({
         "mensaje": f"✅ Vendedor '{nombre_vendedor}' eliminado completamente. Se liberaron {cantidad} módulo(s)."
     })
@@ -941,38 +879,29 @@ def asignar_puesto():
             return jsonify({"error": f"Falta el campo: {campo}"}), 400
     
     modulos = nueva_asignacion['modulos']
-    
     if modulos > 4:
         return jsonify({"error": "Máximo 4 módulos por vendedor"}), 400
     
-    sector = next((s for s in datos['sectores'] 
-                   if s['id'] == nueva_asignacion['id_sector']), None)
-    
+    sector = next((s for s in datos['sectores'] if s['id'] == nueva_asignacion['id_sector']), None)
     if not sector:
         return jsonify({"error": "El sector no existe"}), 404
     
     if nueva_asignacion['giro_negocio'] != sector['categoria']:
-        return jsonify({
-            "error": f"❌ El giro no coincide con la zona '{sector['nombre']}'"
-        }), 400
+        return jsonify({"error": f"❌ El giro no coincide con la zona '{sector['nombre']}'"}), 400
     
     if not verificar_cupo_disponible(nueva_asignacion['id_sector'], modulos):
         limite = LIMITES_SECTOR[nueva_asignacion['id_sector']]["maximo"]
         conteo = contar_puestos_por_sector()
         disponibles = limite - conteo[nueva_asignacion['id_sector']]
-        return jsonify({
-            "error": f"❌ No hay suficiente espacio. Necesitas {modulos} módulo(s), solo hay {disponibles} disponible(s)"
-        }), 400
+        return jsonify({"error": f"❌ No hay suficiente espacio. Necesitas {modulos} módulo(s), solo hay {disponibles} disponible(s)"}), 400
     
-    ultimo_id = max([p['id'] for p in datos['puestos']]) if datos['puestos'] else 0
     nuevos_ids = []
-    
     for i in range(modulos):
-        nuevo_id = ultimo_id + i + 1
+        nuevo_id = siguiente_id_disponible(nueva_asignacion['id_sector'])
+        if nuevo_id is None:
+            rango = RANGOS_IDS[nueva_asignacion['id_sector']]
+            return jsonify({"error": f"No hay IDs disponibles en el rango {rango['inicio']}-{rango['fin']} para {rango['sector']}"}), 400
         nuevos_ids.append(nuevo_id)
-        
-        ancho = 5
-        largo = modulos * 5
         
         nuevo_puesto = {
             "id": nuevo_id,
@@ -980,15 +909,14 @@ def asignar_puesto():
             "nombre_vendedor": nueva_asignacion['nombre_vendedor'],
             "giro_negocio": nueva_asignacion['giro_negocio'],
             "dimensiones": {
-                "ancho": ancho,
-                "largo": largo,
-                "metros_cuadrados": round(ancho * largo, 2)
+                "ancho": 5,
+                "largo": 5,
+                "metros_cuadrados": 25
             }
         }
         datos['puestos'].append(nuevo_puesto)
     
     guardar_datos(datos)
-    
     return jsonify({
         "mensaje": f"✅ {nueva_asignacion['nombre_vendedor']} asignado con {modulos} módulo(s) (IDs: {nuevos_ids})",
         "ids_asignados": nuevos_ids
@@ -997,29 +925,20 @@ def asignar_puesto():
 @app.route('/api/inventario/categorias', methods=['GET'])
 def buscar_producto():
     producto = request.args.get('producto', '').lower()
-    
     if not producto:
         return jsonify({"error": "Debes especificar un producto"}), 400
     
-    datos = leer_datos()
-    
     mapa_productos = {
-        'manzana': 'frutas_verduras',
-        'pera': 'frutas_verduras',
-        'platano': 'frutas_verduras',
-        'lechuga': 'frutas_verduras',
-        'tomate': 'frutas_verduras',
-        'res': 'carnes',
-        'pollo': 'carnes',
-        'cerdo': 'carnes',
-        'camisa': 'textiles',
-        'pantalon': 'textiles'
+        'manzana': 'frutas_verduras', 'pera': 'frutas_verduras', 'platano': 'frutas_verduras',
+        'lechuga': 'frutas_verduras', 'tomate': 'frutas_verduras',
+        'res': 'carnes', 'pollo': 'carnes', 'cerdo': 'carnes',
+        'camisa': 'textiles', 'pantalon': 'textiles'
     }
     
     if producto in mapa_productos:
         categoria = mapa_productos[producto]
+        datos = leer_datos()
         sector_encontrado = next((s for s in datos['sectores'] if s['categoria'] == categoria), None)
-        
         if sector_encontrado:
             return jsonify({
                 "producto": producto,
@@ -1028,25 +947,19 @@ def buscar_producto():
                 "ubicacion": f"Zona {sector_encontrado['id']}"
             })
     
-    return jsonify({
-        "error": f"Producto '{producto}' no encontrado",
-        "productos_disponibles": list(mapa_productos.keys())
-    }), 404
+    return jsonify({"error": f"Producto '{producto}' no encontrado"}), 404
 
 @app.route('/api/estadisticas', methods=['GET'])
 def estadisticas():
     datos = leer_datos()
-    
     total_puestos = len(datos['puestos'])
     total_sectores = len(datos['sectores'])
     conteo = contar_puestos_por_sector()
-    
     return jsonify({
         "total_sectores": total_sectores,
         "total_puestos": total_puestos,
         "limite_total_mercado": TOTAL_MAXIMO_LOCALES,
-        "puestos_por_sector": conteo,
-        "modulo_base": "5m x 5m (ancho fijo 5m)"
+        "puestos_por_sector": conteo
     })
 
 # ============ EJECUTAR LA APLICACIÓN ============
@@ -1057,19 +970,15 @@ if __name__ == '__main__':
     print("=" * 50)
     print("📍 Interfaz web: http://localhost:5001")
     print("=" * 50)
-    print("📊 CONFIGURACIÓN DE DIMENSIONES:")
-    print("   📐 Ancho FIJO: 5 metros")
-    print("   📏 Largo variable: módulos x 5 metros")
-    print("   1 módulo → 5m x 5m = 25m²")
-    print("   2 módulos → 5m x 10m = 50m²")
-    print("   3 módulos → 5m x 15m = 75m²")
-    print("   4 módulos → 5m x 20m = 100m²")
-    print("   ⚠️ Máximo: 4 módulos por vendedor")
+    print("📊 CONFIGURACIÓN DE PASAJES (RANGOS DE IDS):")
+    print("   🥩 Carnes: IDs 1 al 8")
+    print("   🥬 Frutas y Verduras: IDs 9 al 16")
+    print("   👕 Textiles: IDs 17 al 20")
     print("=" * 50)
-    print("   🥬 Frutas y Verduras: 8 locales")
-    print("   🥩 Carnes: 8 locales")
-    print("   👕 Textiles: 4 locales")
-    print(f"   🏪 TOTAL: {TOTAL_MAXIMO_LOCALES} locales")
+    print("📐 CONFIGURACIÓN DE DIMENSIONES:")
+    print("   • Ancho fijo: 5 metros")
+    print("   • Cada módulo: 5m x 5m = 25m²")
+    print("   • Máximo 4 módulos por vendedor")
     print("=" * 50)
     print("Presiona CTRL+C para detener el servidor")
     print("=" * 50)
