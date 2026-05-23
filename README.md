@@ -5,25 +5,25 @@
 ![Flask](https://img.shields.io/badge/Flask-3.x-purple)
 ![Licencia](https://img.shields.io/badge/Licencia-Universitaria-orange)
 
-## 📋 Descripción del Proyecto
+##  Descripción del Proyecto
 
 **MercatoLogic API** es un sistema de gestión logística para mercados locales y ferias libres, desarrollado como proyecto para el curso de Programación 3. La API permite a los administradores organizar la distribución de puestos por categorías (frutas, verduras, carnes, textiles), validando que el giro comercial del vendedor coincida con la zona asignada.
 
-### 🎯 Problema que resuelve
+###  Problema que resuelve
 
-- ❌ **Contaminación cruzada** - Mezcla de productos incompatibles
-- ❌ **Dificultad de navegación** - Compradores no encuentran productos
-- ❌ **Saturación de espacios** - Invasión de pasillos y salidas
+-  **Contaminación cruzada** - Mezcla de productos incompatibles
+- **Dificultad de navegación** - Compradores no encuentran productos
+- **Saturación de espacios** - Invasión de pasillos y salidas
 
-### ✅ Beneficios
+###  Beneficios
 
-- 🏙️ **Ordenamiento Urbano** - Pasillos despejados
-- 🩺 **Higiene y Salud** - Separación efectiva de productos
-- 💰 **Eficiencia Comercial** - Vendedores más localizables
+- **Ordenamiento Urbano** - Pasillos despejados
+- **Higiene y Salud** - Separación efectiva de productos
+-  **Eficiencia Comercial** - Vendedores más localizables
 
 ---
 
-## 👥 Equipo de Desarrollo
+##  Equipo de Desarrollo
 
 | Integrante | Responsabilidad |
 |------------|-----------------|
@@ -41,7 +41,7 @@
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 | Categoría | Tecnología |
 |-----------|------------|
@@ -60,14 +60,14 @@
 
 | Supuesto | Estado | Evidencia |
 |----------|--------|-----------|
-| **Supuesto 1** (Sin autenticación) | ✅ Cumple | No hay login ni contraseñas en el sistema |
-| **Supuesto 2** (Solo JSON) | ✅ Cumple | Base de datos en database.json, sin MySQL/PostgreSQL |
-| **Supuesto 3** (Un admin a la vez) | ✅ Cumple | Sin mecanismos de bloqueo, se asume uso secuencial |
-| **Supuesto 4** (Conocimientos Python) | ✅ Cumple | El código utiliza variables, funciones, condicionales y archivos |
+| **Supuesto 1** (Sin autenticación) |  Cumple | No hay login ni contraseñas en el sistema |
+| **Supuesto 2** (Solo JSON) |  Cumple | Base de datos en database.json, sin MySQL/PostgreSQL |
+| **Supuesto 3** (Un admin a la vez) | Cumple | Sin mecanismos de bloqueo, se asume uso secuencial |
+| **Supuesto 4** (Conocimientos Python) |  Cumple | El código utiliza variables, funciones, condicionales y archivos |
 
 ---
 
-## 📦 Instalación y Configuración
+## Instalación y Configuración
 
 ### Requisitos Previos
 
